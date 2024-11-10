@@ -7,3 +7,4 @@
 *go.sum
 backend/trade_exec/registry/goprotos
 *grpc_client.py
+.DS_Store
