@@ -1,10 +1,4 @@
-import json
-import asyncio
-import websockets
-from circuitbreaker import circuit
-
-def stockDataFailureHandler(symbol):
-    return {
+result = {
   "info": {
     "symbol": "-1",
     "companyName": "-1",
@@ -151,49 +145,3 @@ def stockDataFailureHandler(symbol):
     "atoSellQty": -1
   }
 }
-
-
-@circuit(failure_threshold=5, recovery_timeout=30, fallback_function=stockDataFailureHandler)
-def getStockData(symbol):
-    from headers import s
-    stockData = s.get(f"https://www.nseindia.com/api/quote-equity?symbol={symbol}")
-    return stockData.json()
-
-def marketFailureHandler():
-    return {"marketState":[{"market":"Capital Market","marketStatus":"Closed","tradeDate":"-1","index":"-1","last":-1,"variation":-1,"percentChange":-1,"marketStatusMessage":"Normal Market has Closed"}]}
-
-@circuit(failure_threshold=5, recovery_timeout=30, fallback_function=marketFailureHandler)
-def getMarketData():
-    from headers import s
-    marketData = s.get("https://www.nseindia.com/api/marketStatus")
-    return marketData.json()['marketState'][0]
-
-async def hello(websocket, path):
-
-    try:
-        async for message in websocket:
-            from headers import s
-            while True:
-                if(message != 'initiate'):
-                    # stockData = s.get(f"https://www.nseindia.com/api/quote-equity?symbol={message}")
-                    stockData = getStockData(message)
-                    # await websocket.send(json.dumps(stockData.json()))
-                    await websocket.send(json.dumps(stockData))
-                    await asyncio.sleep(40)
-                    pass
-                else:
-                    # marketData = s.get("https://www.nseindia.com/api/marketStatus")
-                    marketData = getMarketData()
-                    # await websocket.send(json.dumps(marketData.json()['marketState'][0]))
-                    await websocket.send(json.dumps(marketData))
-                    await asyncio.sleep(40)
-                    pass
-                pass
-            
-    except websockets.exceptions.ConnectionClosedError:
-        print("Connection closed from client.")
-
-start_server = websockets.serve(hello, "localhost", 8201)
-
-asyncio.get_event_loop().run_until_complete(start_server)
-asyncio.get_event_loop().run_forever()

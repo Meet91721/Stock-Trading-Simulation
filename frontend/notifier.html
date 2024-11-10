@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ActiveMQ Message Listener</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <style>
+        .form-group { margin: 10px 0; }
+        .form-group label { display: inline-block; width: 120px; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <div style="padding: 20px">
+        <h2>ActiveMQ Message Listener</h2>
+        
+        <div class="form-group">
+            <label for="wsUrl">WebSocket URL:</label>
+            <input type="text" id="wsUrl" value="ws://localhost:61614/stomp" style="width: 200px">
+        </div>
+        <div class="form-group">
+            <label for="username">Username:</label>
+            <input type="text" id="username" value="admin">
+        </div>
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" value="password">
+        </div>
+        <div class="form-group">
+            <label for="destination">Queue:</label>
+            <input type="text" id="destination" value="/queue/event">
+        </div>
+        
+        <div style="margin: 20px 0;">
+            <button onclick="connect()" id="connectBtn">Connect</button>
+            <button onclick="disconnect()" id="disconnectBtn" disabled>Disconnect</button>
+        </div>
+        
+        <div id="status" style="margin: 10px 0;">Status: Disconnected</div>
+        <div id="error" class="error"></div>
+        
+        <div id="messages" style="margin-top: 20px">
+            <h3>Received Messages:</h3>
+            <ul id="messageList"></ul>
+        </div>
+    </div>
+
+    <script>
+        let stompClient = null;
+        const statusDiv = document.getElementById('status');
+        const errorDiv = document.getElementById('error');
+        const connectBtn = document.getElementById('connectBtn');
+        const disconnectBtn = document.getElementById('disconnectBtn');
+        const messageList = document.getElementById('messageList');
+
+        function connect() {
+            errorDiv.textContent = '';
+            statusDiv.textContent = 'Status: Attempting to connect...';
+            
+            const wsUrl = document.getElementById('wsUrl').value;
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const destination = document.getElementById('destination').value;
+
+            try {
+                // Create WebSocket with STOMP protocol
+                const ws = new WebSocket(wsUrl, ['v12.stomp']);
+                
+                ws.onerror = function(error) {
+                    errorDiv.textContent = 'WebSocket Error: Unable to establish connection. Please check if ActiveMQ is running and WebSocket is enabled.';
+                    statusDiv.textContent = 'Status: Connection failed';
+                };
+
+                stompClient = Stomp.over(ws);
+                
+                // Enable detailed logging
+                stompClient.debug = function(str) {
+                    console.log(str);
+                };
+
+                // Configure STOMP client
+                const connectHeaders = {
+                    login: username,
+                    passcode: password,
+                    'accept-version': '1.2',
+                    'heart-beat': '10000,10000'
+                };
+
+                stompClient.connect(connectHeaders, 
+                    function(frame) { // Success callback
+                        statusDiv.textContent = 'Status: Connected!';
+                        statusDiv.className = 'success';
+                        connectBtn.disabled = true;
+                        disconnectBtn.disabled = false;
+                        errorDiv.textContent = '';
+
+                        // Subscribe to the specified queue
+                        stompClient.subscribe(destination, function(message) {
+                            // Show alert
+                            alert('New message received: ' + message.body);
+                            
+                            // Add to message list
+                            const li = document.createElement('li');
+                            li.textContent = `${new Date().toLocaleTimeString()} - ${message.body}`;
+                            messageList.appendChild(li);
+                        });
+                    },
+                    function(error) { // Error callback
+                        errorDiv.textContent = 'STOMP Error: ' + error;
+                        statusDiv.textContent = 'Status: Connection failed';
+                        console.error('STOMP error:', error);
+                    }
+                );
+            } catch (e) {
+                errorDiv.textContent = 'Error: ' + e.message;
+                statusDiv.textContent = 'Status: Connection failed';
+                console.error('Connection error:', e);
+            }
+        }
+
+        function disconnect() {
+            if (stompClient) {
+                try {
+                    stompClient.disconnect();
+                } catch (e) {
+                    console.error('Disconnect error:', e);
+                }
+                stompClient = null;
+                statusDiv.textContent = 'Status: Disconnected';
+                statusDiv.className = '';
+                connectBtn.disabled = false;
+                disconnectBtn.disabled = true;
+                errorDiv.textContent = '';
+            }
+        }
+
+        // Handle page unload
+        window.onbeforeunload = function() {
+            disconnect();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+syntax='proto3';
+
+option go_package = "trade-service/goprotos;goprotos";
+
+message DbID {
+    string dbid = 1;
+}
+
+message ShareSymbol {
+    string symbol = 1;
+}
+
+message SharePrice {
+    string status = 1;
+    optional float price = 2;
+}
+
+message NotingTransaction {
+    string dbid = 1;
+    string symbol = 2;
+    int32 qty = 3;
+    float price = 4;
+    string error = 5;
+}
+
+message ShareQuery {
+    string dbid = 1;
+    string symbol = 2;
+}
+
+message ShareQtyResponse {
+    int32 qty = 1;
+}
+
+message FundResponse {
+    float fund = 1;
+}
+
+message Message {
+    string message = 1;
+}
+
+service RegisteringTransaction {
+    rpc GetFund(DbID) returns (FundResponse);
+    rpc GetShareQty(ShareQuery) returns (ShareQtyResponse);
+    rpc Buy(NotingTransaction) returns (Message);
+    rpc Sell(NotingTransaction) returns (Message);
+    rpc GetShareLivePrice(ShareSymbol) returns (SharePrice);
+}

@@ -1,4 +1,5 @@
 from requests import Session
+import csv
 
 h = {
     "Host": "www.nseindia.com",
@@ -17,6 +18,22 @@ h = {
 }
 
 
-s = Session()
-s.headers.update(h)
-s.get("http://www.nseindia.com")
+session = Session()
+session.headers.update(h)
+session.get("http://www.nseindia.com")
+
+live_quote = 'https://www.nseindia.com/api/quote-equity?symbol={}'
+market_status = 'https://www.nseindia.com/api/marketStatus'
+
+
+name_mappings = {}
+names = []
+file = open('./backend/nse_data/data/MCAP31032023_0.csv')
+csvreader = csv.reader(file)
+
+for row in csvreader:
+    name_mappings[row[1].lower()] = {"name": row[2], "symb": row[1]}
+    names.append(row[1].lower())
+    name_mappings[row[2].lower()] = {"name": row[2], "symb": row[1]}
+    names.append(row[2].lower())
+file.close()

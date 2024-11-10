@@ -1,0 +1,55 @@
+<html>
+    <link rel="stylesheet" href="./stylings/styling.css">
+    <body style="border: 2px black solid;">
+        <div>
+            <h2  id="company-name"></h2>
+            <h4 id="company-symbol" style="color: gray;"></h4>
+            <div style="display: flex; border: 2px black solid; justify-content: space-around">
+                <div>
+                    <span style="display: block;">Last</span>
+                    <span id="last"></span>
+                </div>
+                <div>
+                    <span style="display: block;">Open</span>
+                    <span id="open"></span>
+                </div>
+                <div>
+                    <span style="display: block;">High</span>
+                    <span id="high"></span>
+                </div>
+                <div>
+                    <span style="display: block;">Low</span>
+                    <span id="low"></span>
+                </div>
+            </div>
+            <div style="margin-top: 30px; margin-bottom: 10px;">
+                <label>Quantity</label>
+                <input type="number" id="quantity" name="quantity" min="1" required>
+                <label>Price</label>
+                <input type="number" id="price" name="price" required>
+            </div>
+            <button onclick="buyHandler(event)">Buy</button>
+            <button onclick="sellHandler(event)" style="margin-bottom: 30px;">Sell</button>
+        </div>
+        <div>
+            <form>
+                <input type="date"  name="start" id="start" required>
+                <input type="date"  name="end" id="end" required>
+                <input type="submit" value="Submit" onclick="fetchHistoryHandler(event)">
+            </form>
+            <table id="history" >
+            </table>
+        </div>
+    </body>
+    <script src="./scripts/stock_script.js"></script>
+    <script>
+        let symbol = window.frameElement.getAttribute('symbol');
+        if(symbol === null){
+            const element = document.getElementsByTagName('body')[0].style.display = "none";
+        }else{
+            const element = document.getElementsByTagName('body')[0].style.display = "block";
+            socketHandler(symbol)
+        }
+        
+    </script>
+</html>

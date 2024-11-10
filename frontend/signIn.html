@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login/Register</title>
+</head>
+<body>
+    <h1>Login</h1>
+    <form>
+        <label for="lemail">Email:</label>
+        <input type="text" name="lemail" id="lemail" required>
+        <br>
+        <label for="lpassword">Password:</label>
+        <input type="password" name="lpassword" id="lpassword" required>
+        <br>
+        <input type="submit" onclick="login(event)" value="Login">
+    </form>
+    <h1>Register</h1>
+    <form >
+        <label for="rfname">First Name:</label>
+        <input type="text" name="rfname" id="rfname" required>
+        <br>
+        <label for="rlname">Last Name:</label>
+        <input type="text" name="rlname" id="rlname" required>
+        <br>
+        <label for="remail">Email:</label>
+        <input type="email" name="remail" id="remail" required>
+        <br>
+        <label for="rpassword">Password:</label>
+        <input type="password" name="rpassword" id="rpassword" required>
+        <br>
+        <input type="submit" value="Register" onclick="register(event)">
+    </form>
+    <h1 id="error"></h1>
+</body>
+
+<script>
+    async function register(event){
+        event.preventDefault(); 
+        let fname = document.getElementById("rfname").value;
+        let lname = document.getElementById("rlname").value;
+        let email = document.getElementById("remail").value;
+        let password = document.getElementById("rpassword").value;
+        console.log(fname, lname, email, password);
+
+        try {
+            const response = await fetch("http://127.0.0.1:8101/register/", {
+                body: JSON.stringify({
+                    'fname': fname,
+                    'lname': lname,
+                    'email': email,
+                    'password': password
+                }),
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            const result = await response.json(); // Parse response only once
+
+            if (response.status !== 200 || result.status === "error") {
+                // If not a 200 status code, show the error message
+                console.log(result);
+                document.getElementById("error").innerHTML = result.message || "An unknown error occurred";
+            } else {
+                // If successful, show the success message or handle accordingly
+                console.log(result);
+                document.getElementById("error").innerHTML = result.message || "Please check you email for activation link";
+            }
+        } catch (error) {
+            console.log("error: ", error);
+            document.getElementById("error").innerHTML = "Failed to connect to the server.";
+        }
+    }
+
+    async function login(event){
+        event.preventDefault();
+        let email = document.getElementById("lemail").value;
+        let password = document.getElementById("lpassword").value;
+        let data = {
+            email: email,
+            password: password
+        }
+        await fetch("http://127.0.0.1:8101/login", {
+            body: JSON.stringify(data),
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        }).then(async (r) => {
+            if(r.status !== 200){
+                await r.json().then((response) => {
+                    console.log(response)
+                    document.getElementById("error").innerHTML = response.msg;
+                    return;
+                })
+            } else{
+                await r.json().then((response) => {
+                    // console.log(response)
+                    localStorage.setItem("token", response.dbid);
+                    window.location.href = "/home.html"
+                    return
+                })
+            }
+        }).catch((error) => {
+            console.log("error: ", error)
+        });
+    }
+</script>
+</html>

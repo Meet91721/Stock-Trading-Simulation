@@ -1,0 +1,9 @@
+/frontend/js/
+*.vscode
+*__pycache__/
+*secrets.py
+*db-setup.txt
+*go.mod
+*go.sum
+backend/trade_exec/registry/goprotos
+*grpc_client.py
